@@ -1,0 +1,52 @@
+name: NamazBD
+options:
+  bundleIdPrefix: dev.jobayer
+  deploymentTarget:
+    macOS: "13.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    CODE_SIGN_IDENTITY: "-"
+    CODE_SIGN_STYLE: Manual
+    DEVELOPMENT_TEAM: ""
+    ENABLE_HARDENED_RUNTIME: NO
+
+targets:
+  PrayerKit:
+    type: framework
+    platform: macOS
+    sources:
+      - path: Sources/PrayerKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.jobayer.namazbd.PrayerKit
+        SKIP_INSTALL: YES
+
+  NamazBD:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources/NamazBD
+    dependencies:
+      - target: PrayerKit
+        embed: true
+    info:
+      path: Sources/NamazBD/Info.generated.plist
+      properties:
+        CFBundleName: NamazBD
+        CFBundleDisplayName: Namaz BD
+        CFBundleShortVersionString: "0.1.0"
+        CFBundleVersion: "1"
+        LSUIElement: true
+        LSMinimumSystemVersion: "13.0"
+        NSHumanReadableCopyright: "Namaz BD"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.jobayer.namazbd
+        PRODUCT_NAME: NamazBD
+        ENABLE_PREVIEWS: YES
+        COMBINE_HIDPI_IMAGES: YES
