@@ -110,4 +110,6 @@ git tag v0.2.0 && git push origin v0.2.0
 
 ## Credits
 
-Inspired by [**Prayer Times for macOS**](https://github.com/tareq1988/prayer-times-macos) by [Tareq Hasan](https://github.com/tareq1988) — a great native menu-bar prayer-times app. Namaz BD is an independent, from-scratch implementation focused on Bangladesh; it does not reuse that project's code, but credit goes to it for the idea and the menu-bar UX.
+The original idea and design belong to [**Prayer Times for macOS**](https://github.com/tareq1988/prayer-times-macos) by [Tareq Hasan](https://github.com/tareq1988) — full credit to him for the concept and the menu-bar UX. 🙏
+
+Namaz BD is just a personal build I made for my own use in Bangladesh: a from-scratch implementation (it does not reuse the original's code) with Bangladesh districts and the Islamic Foundation Bangladesh calculation as defaults. If you want the polished, feature-complete app, please use [Tareq's original](https://github.com/tareq1988/prayer-times-macos).
