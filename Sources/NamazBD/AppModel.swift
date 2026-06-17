@@ -45,6 +45,14 @@ final class AppModel: ObservableObject {
         focusModeEnabled = defaults.object(forKey: Keys.focusMode) as? Bool ?? true
         recompute()
         startTimer()
+        presentFocusTestIfRequested()
+    }
+
+    private func presentFocusTestIfRequested() {
+        guard ProcessInfo.processInfo.environment["NAMAZBD_FOCUS_TEST"] == "1" else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
+            self?.previewFocus()
+        }
     }
 
     func previewFocus() {
