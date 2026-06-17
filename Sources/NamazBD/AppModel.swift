@@ -19,6 +19,9 @@ final class AppModel: ObservableObject {
     @Published var reminderLeadMinutes: Int {
         didSet { persist(reminderLeadMinutes, forKey: Keys.reminderLead); refreshNotifications() }
     }
+    @Published var focusModeEnabled: Bool {
+        didSet { persist(focusModeEnabled, forKey: Keys.focusMode) }
+    }
 
     @Published private(set) var now: Date = Date()
     @Published private(set) var today: DailyPrayerTimes?
@@ -26,9 +29,12 @@ final class AppModel: ObservableObject {
 
     private let defaults = UserDefaults.standard
     private let notifications = NotificationScheduler()
+    private let focusController = FocusModeController()
+    private var triggeredFocusKeys: Set<String> = []
     private var timer: AnyCancellable?
 
     static let timeZone = TimeZone(identifier: "Asia/Dhaka") ?? .current
+    static let focusDuration: TimeInterval = 15 * 60
 
     init() {
         districtId = defaults.string(forKey: Keys.district) ?? BangladeshDistricts.dhaka.id
@@ -36,8 +42,14 @@ final class AppModel: ObservableObject {
         asrJuristic = AsrJuristic(rawValue: defaults.string(forKey: Keys.asr) ?? "") ?? .hanafi
         notificationsEnabled = defaults.object(forKey: Keys.notifications) as? Bool ?? true
         reminderLeadMinutes = defaults.object(forKey: Keys.reminderLead) as? Int ?? 10
+        focusModeEnabled = defaults.object(forKey: Keys.focusMode) as? Bool ?? true
         recompute()
         startTimer()
+    }
+
+    func previewFocus() {
+        let prayer = upcoming?.prayer ?? .dhuhr
+        focusController.present(prayer: prayer, prayerTime: now, duration: Self.focusDuration)
     }
 
     var selectedDistrict: District {
@@ -96,6 +108,7 @@ final class AppModel: ObservableObject {
                 guard let self else { return }
                 self.now = date
                 self.rolloverIfNeeded()
+                self.checkFocusTrigger()
             }
     }
 
@@ -103,7 +116,21 @@ final class AppModel: ObservableObject {
         guard let today else { return }
         let calendar = makeCalendar()
         guard !calendar.isDate(today.date, inSameDayAs: now) else { return }
+        triggeredFocusKeys.removeAll()
         recompute()
+    }
+
+    private func checkFocusTrigger() {
+        guard focusModeEnabled, let today else { return }
+        let dayKey = makeCalendar().startOfDay(for: now).timeIntervalSince1970
+        for prayer in Prayer.dailyOrder where prayer.isPrayer {
+            guard let time = today.time(for: prayer) else { continue }
+            guard now >= time, now < time.addingTimeInterval(2) else { continue }
+            let key = "\(prayer.rawValue)-\(dayKey)"
+            guard !triggeredFocusKeys.contains(key) else { continue }
+            triggeredFocusKeys.insert(key)
+            focusController.present(prayer: prayer, prayerTime: time, duration: Self.focusDuration)
+        }
     }
 
     private func refreshNotifications() {
@@ -127,5 +154,6 @@ final class AppModel: ObservableObject {
         static let asr = "namazbd.asr"
         static let notifications = "namazbd.notifications"
         static let reminderLead = "namazbd.reminderLead"
+        static let focusMode = "namazbd.focusMode"
     }
 }

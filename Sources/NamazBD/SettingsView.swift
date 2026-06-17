@@ -50,6 +50,16 @@ struct SettingsView: View {
                         .labelsHidden()
                     }
                 }
+
+                section("Focus Mode") {
+                    Toggle("Full-screen focus at prayer time (15 min)", isOn: $model.focusModeEnabled)
+                        .font(.system(size: 12))
+                    Button("Preview focus screen") {
+                        model.previewFocus()
+                    }
+                    .font(.system(size: 12))
+                    .controlSize(.small)
+                }
             }
             .padding(14)
         }
