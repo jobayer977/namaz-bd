@@ -105,3 +105,9 @@ Releases are fully automated. Push a version tag and GitHub Actions builds the a
 ```bash
 git tag v0.2.0 && git push origin v0.2.0
 ```
+
+---
+
+## Credits
+
+Inspired by [**Prayer Times for macOS**](https://github.com/tareq1988/prayer-times-macos) by [Tareq Hasan](https://github.com/tareq1988) — a great native menu-bar prayer-times app. Namaz BD is an independent, from-scratch implementation focused on Bangladesh; it does not reuse that project's code, but credit goes to it for the idea and the menu-bar UX.
