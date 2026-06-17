@@ -1,0 +1,78 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (e.g. 0.2.0)"
+        required: true
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${GITHUB_REF_NAME#v}"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Releasing version $VERSION"
+
+      - name: Build app bundle
+        env:
+          APP_VERSION: ${{ steps.version.outputs.version }}
+        run: ./scripts/build-app.sh release
+
+      - name: Package and checksum
+        id: package
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          cd dist
+          ditto -c -k --keepParent NamazBD.app "NamazBD-$VERSION.zip"
+          SHA="$(shasum -a 256 "NamazBD-$VERSION.zip" | awk '{print $1}')"
+          echo "sha256=$SHA" >> "$GITHUB_OUTPUT"
+          echo "asset=dist/NamazBD-$VERSION.zip" >> "$GITHUB_OUTPUT"
+
+      - name: Publish release to tap repo
+        env:
+          GH_TOKEN: ${{ secrets.TAP_REPO_TOKEN }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          ASSET="dist/NamazBD-$VERSION.zip"
+          if gh release view "v$VERSION" --repo jobayer977/homebrew-namaz-bd >/dev/null 2>&1; then
+            gh release upload "v$VERSION" "$ASSET" --repo jobayer977/homebrew-namaz-bd --clobber
+          else
+            gh release create "v$VERSION" "$ASSET" \
+              --repo jobayer977/homebrew-namaz-bd \
+              --title "Namaz BD $VERSION" \
+              --notes "Automated release $VERSION"
+          fi
+
+      - name: Update Homebrew cask
+        env:
+          TAP_REPO_TOKEN: ${{ secrets.TAP_REPO_TOKEN }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          SHA="${{ steps.package.outputs.sha256 }}"
+          git clone "https://x-access-token:${TAP_REPO_TOKEN}@github.com/jobayer977/homebrew-namaz-bd.git" tap
+          cd tap
+          sed -i '' -E "s/version \"[^\"]*\"/version \"$VERSION\"/" Casks/namaz-bd.rb
+          sed -i '' -E "s/sha256 \"[^\"]*\"/sha256 \"$SHA\"/" Casks/namaz-bd.rb
+          git config user.name "jobayer977"
+          git config user.email "jobayer977@users.noreply.github.com"
+          git commit -am "Update namaz-bd to $VERSION"
+          git push

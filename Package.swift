@@ -8,7 +8,8 @@ let package = Package(
         .target(name: "PrayerKit"),
         .executableTarget(
             name: "NamazBD",
-            dependencies: ["PrayerKit"]
+            dependencies: ["PrayerKit"],
+            exclude: ["Info.generated.plist"]
         )
     ]
 )

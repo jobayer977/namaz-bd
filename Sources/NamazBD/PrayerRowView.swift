@@ -1,66 +1,72 @@
 import SwiftUI
 import PrayerKit
 
+enum PrayerRowState {
+    case past
+    case next
+    case upcoming
+}
+
 struct PrayerRowView: View {
     let prayer: Prayer
     let time: Date
-    let isCurrent: Bool
-    let isNext: Bool
+    let state: PrayerRowState
+    let countdownText: String?
 
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: iconName)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(accent)
+        HStack(spacing: 11) {
+            Image(systemName: prayer.symbolName)
+                .font(.system(size: 13))
+                .foregroundStyle(iconColor)
                 .frame(width: 18)
 
-            VStack(alignment: .leading, spacing: 1) {
-                Text(prayer.englishName)
-                    .font(.system(size: 13, weight: isHighlighted ? .semibold : .regular))
-                Text(prayer.banglaName)
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
-            }
+            Text(prayer.englishName)
+                .font(.system(size: 13, weight: state == .next ? .semibold : .regular))
+                .foregroundStyle(nameColor)
 
-            Spacer()
+            Spacer(minLength: 8)
 
-            if isNext {
-                Text("NEXT")
-                    .font(.system(size: 9, weight: .bold))
-                    .tracking(0.8)
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 6)
+            if state == .next, let countdownText {
+                Text(countdownText)
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(BrandTheme.accent)
+                    .padding(.horizontal, 7)
                     .padding(.vertical, 2)
-                    .background(Capsule().fill(Color.accentColor))
+                    .background(Capsule().fill(BrandTheme.accent.opacity(0.18)))
             }
 
             Text(TimeFormatting.clock(time))
-                .font(.system(size: 13, weight: isHighlighted ? .semibold : .regular))
+                .font(.system(size: 13, weight: state == .next ? .semibold : .regular))
                 .monospacedDigit()
-                .foregroundStyle(isHighlighted ? Color.primary : .secondary)
+                .foregroundStyle(timeColor)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 7)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(isHighlighted ? Color.accentColor.opacity(0.10) : Color.clear)
+                .fill(state == .next ? BrandTheme.accent.opacity(0.12) : Color.clear)
         )
     }
 
-    private var isHighlighted: Bool { isCurrent || isNext }
+    private var faded: Color { Color.secondary.opacity(0.55) }
 
-    private var accent: Color {
-        isHighlighted ? Color.accentColor : Color.secondary
+    private var iconColor: Color {
+        switch state {
+        case .past: return faded
+        case .next: return BrandTheme.accent
+        case .upcoming: return prayer.symbolTint
+        }
     }
 
-    private var iconName: String {
-        switch prayer {
-        case .fajr: return "sunrise"
-        case .sunrise: return "sun.max"
-        case .dhuhr: return "sun.max.fill"
-        case .asr: return "sun.min"
-        case .maghrib: return "sunset"
-        case .isha: return "moon.stars"
+    private var nameColor: Color {
+        state == .past ? .secondary : .primary
+    }
+
+    private var timeColor: Color {
+        switch state {
+        case .past: return faded
+        case .next: return BrandTheme.accent
+        case .upcoming: return .secondary
         }
     }
 }
