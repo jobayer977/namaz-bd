@@ -6,9 +6,9 @@ struct MenuBarLabelView: View {
 
     var body: some View {
         if let upcoming = model.upcoming, let countdown = model.countdownToNext {
-            HStack(spacing: 4) {
+            HStack(spacing: 3) {
                 Image(systemName: upcoming.prayer.symbolName)
-                Text("\(upcoming.prayer.englishName) in \(TimeFormatting.compactCountdown(countdown))")
+                Text(TimeFormatting.compactCountdown(countdown))
             }
         } else {
             Image(systemName: "moon.stars")
